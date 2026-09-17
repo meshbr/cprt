@@ -315,8 +315,9 @@
           svg.removeAttribute('width');
           svg.removeAttribute('height');
           svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-          svg.style.width = '100%';
-          svg.style.height = 'auto';
+          // Let CSS size it: width/height auto with max-* lets the plate's
+          // height cap scale the drawing instead of clipping it. Setting an
+          // explicit width here would override that.
           svg.style.display = 'block';
 
           plate.innerHTML = '';
