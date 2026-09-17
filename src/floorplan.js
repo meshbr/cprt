@@ -32,7 +32,8 @@
       unitBase: styles.getPropertyValue('--fpx-unit-base').trim(),
       structure: styles.getPropertyValue('--fpx-structure').trim(),
       stroke: styles.getPropertyValue('--fpx-stroke').trim(),
-      labelOnUnit: styles.getPropertyValue('--fpx-label-on-unit').trim()
+      labelOnUnit: styles.getPropertyValue('--fpx-label-on-unit').trim(),
+      strokeWidth: styles.getPropertyValue('--fpx-stroke-width').trim()
     };
   }
 
@@ -173,6 +174,24 @@
    * ("STAIRS", "AMENITY ROOM") stay dark on their lighter backgrounds. Match by
    * the number in the label text against the units on this floor.
    */
+  /** Find the label element whose number matches this unit. */
+  function labelFor(svg, number) {
+    var hit = null;
+    Array.prototype.forEach.call(svg.querySelectorAll('text'), function (el) {
+      if (hit) return;
+      if ((el.textContent || '').replace(/\D+/g, '') === number) hit = el;
+    });
+    return hit;
+  }
+
+  function paintLabel(el, color) {
+    if (!el) return;
+    el.style.fill = color || '';
+    Array.prototype.forEach.call(el.querySelectorAll('tspan'), function (t) {
+      t.style.fill = color || '';
+    });
+  }
+
   function tintLabels(svg, numbers, color) {
     if (!svg || !color || color === 'none' || !numbers.length) return;
     Array.prototype.forEach.call(svg.querySelectorAll('text'), function (el) {
@@ -190,14 +209,21 @@
    * stroke are touched, so this changes the outlines' colour without adding
    * any, and the line weights Illustrator set are left as they are.
    */
-  function tintStrokes(svg, color) {
-    if (!svg || !color || color === 'none') return;
+  function tintStrokes(svg, color, width) {
+    if (!svg || (!color && !width)) return;
     var shapes = svg.querySelectorAll('polygon, path, rect, circle, polyline, line, g');
     Array.prototype.forEach.call(shapes, function (shape) {
       var stroke = (shape.style.stroke || shape.getAttribute('stroke') || '').trim().toLowerCase();
       if (!stroke || stroke === 'none') return;
-      shape.style.stroke = color;
-      shape.removeAttribute('stroke');
+      if (color && color !== 'none') {
+        shape.style.stroke = color;
+        shape.removeAttribute('stroke');
+      }
+      // Width is in SVG user units, so it scales with the drawing.
+      if (width && width !== 'none') {
+        shape.style.strokeWidth = width;
+        shape.removeAttribute('stroke-width');
+      }
     });
   }
 
@@ -235,6 +261,7 @@
 
     var currentFloor = null;
     var paintedShape = null;
+    var paintedLabel = null;
     var loadedFloor = null;
     var floors = [];
     var floorBySlug = {};
@@ -445,7 +472,7 @@
           var live = plate.querySelector('svg');
           labelsClickThrough(live);
           tintStructure(live, COLORS.structure);
-          tintStrokes(live, COLORS.stroke);
+          tintStrokes(live, COLORS.stroke, COLORS.strokeWidth);
           bindHotspots(live, floor.slug);
           loadedFloor = floor.slug;
         })
@@ -470,7 +497,9 @@
         unit.shape = shape;
         // Take the trailing segment of the slug: 525-unit-400 -> "400".
         // Stripping all non-digits would give "525400" and match nothing.
-        bound.push(String(unit.slug).split('-').pop());
+        var number = String(unit.slug).split('-').pop();
+        bound.push(number);
+        unit.label = labelFor(svg, number);
         repaintBase(shape, COLORS.unitBase);
 
         shape.setAttribute('class', ((shape.getAttribute('class') || '') + ' fpx-linked').trim());
@@ -516,6 +545,10 @@
     }
 
     function clearSelection() {
+      if (paintedLabel) {
+        paintLabel(paintedLabel, '');
+        paintedLabel = null;
+      }
       if (paintedShape) {
         paint(paintedShape, '');
         paintedShape = null;
@@ -525,9 +558,15 @@
     }
 
     function selectUnit(unit) {
+      if (paintedLabel) paintLabel(paintedLabel, '');
       if (paintedShape) paint(paintedShape, '');
       if (unit.shape) paint(unit.shape, COLORS.selected);
       paintedShape = unit.shape;
+      // The selected fill is dark; its label has to lighten to stay readable.
+      if (unit.label && COLORS.labelOnUnit && COLORS.labelOnUnit !== 'none') {
+        paintLabel(unit.label, COLORS.labelOnUnit);
+        paintedLabel = unit.label;
+      }
 
       if (unitUI && unitUI.label) unitUI.label.textContent = unit.name;
 

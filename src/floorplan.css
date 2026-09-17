@@ -13,25 +13,26 @@
  * for when the theme variables are not present. */
 .fpx-section {
   /* Unit states are three steps on the brand ramp rather than three separate
-   * choices, so they stay related to each other and to the brand: pale at
-   * rest, mid on hover, strong when selected. Re-point them at other steps to
-   * shift the whole plate without breaking that relationship. */
-  --fpx-unit-base: var(--swatch--brand-100, #ebfdff);
-  --fpx-unit-hover: var(--swatch--brand-300, #63e2f1);
-  --fpx-unit-selected: var(--swatch--brand-600, #04a3b5);
+   * choices, so they stay related to each other and to the brand: light at
+   * rest, mid on hover, dark when selected. Move all three together to shift
+   * the plate without breaking that relationship. */
+  --fpx-unit-base: var(--swatch--brand-300, #63e2f1);
+  --fpx-unit-hover: var(--swatch--brand-600, #04a3b5);
+  --fpx-unit-selected: var(--swatch--brand-800, #035e68);
+
+  /* The selected fill is dark, so that unit's label lightens while it is
+   * selected and reverts afterwards. Other labels keep the theme text colour.
+   * Set to `none` to leave all labels alone. */
+  --fpx-label-on-unit: var(--swatch--light-100, #fff);
 
   /* Structural areas (stairs, cores, amenity rooms) stay neutral so they read
    * as fixed rather than as another unit state. */
   --fpx-structure: color-mix(in srgb, var(--_theme---text, #000) 12%, transparent);
 
-  /* Outlines carry more work than in the original drawing, where differing
-   * tans separated the units — a flat fill needs the outline to do that job. */
+  /* Outlines. Width is in SVG user units so it scales with the drawing;
+   * `none` keeps whatever weight Illustrator exported. */
   --fpx-stroke: color-mix(in srgb, var(--swatch--brand-900, #000) 35%, transparent);
-
-  /* Labels stay theme text: every unit state on this ramp is light enough to
-   * read against. Set this to a light colour if you move units further down
-   * the ramp. `none` leaves labels alone. */
-  --fpx-label-on-unit: none;
+  --fpx-stroke-width: 2.5;
 }
 
 /* Data carriers exist to pass CMS values to the script, not to be seen. */
