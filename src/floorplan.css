@@ -12,18 +12,26 @@
  * Webflow to decouple the plate from the theme. The hex values are fallbacks
  * for when the theme variables are not present. */
 .fpx-section {
-  --fpx-unit-selected: var(--_theme---heading-accent, #675a57);
-  --fpx-unit-hover: color-mix(in srgb, var(--fpx-unit-selected) 40%, transparent);
+  /* Unit states are three steps on the brand ramp rather than three separate
+   * choices, so they stay related to each other and to the brand: pale at
+   * rest, mid on hover, strong when selected. Re-point them at other steps to
+   * shift the whole plate without breaking that relationship. */
+  --fpx-unit-base: var(--swatch--brand-100, #ebfdff);
+  --fpx-unit-hover: var(--swatch--brand-300, #63e2f1);
+  --fpx-unit-selected: var(--swatch--brand-600, #04a3b5);
 
-  /* Resting fills. Units sit a shade above the page; structural areas (stairs,
-   * cores, amenity rooms) recede, so what is clickable reads without hovering.
-   * Set either to `none` to keep the drawing's own colours instead. */
-  --fpx-unit-base: var(--_theme---background-2, #efe9e7);
+  /* Structural areas (stairs, cores, amenity rooms) stay neutral so they read
+   * as fixed rather than as another unit state. */
   --fpx-structure: color-mix(in srgb, var(--_theme---text, #000) 12%, transparent);
 
-  /* Outlines. Only shapes that already have a stroke are recoloured, so line
-   * weights from the drawing are preserved. */
-  --fpx-stroke: color-mix(in srgb, var(--_theme---text, #000) 30%, transparent);
+  /* Outlines carry more work than in the original drawing, where differing
+   * tans separated the units — a flat fill needs the outline to do that job. */
+  --fpx-stroke: color-mix(in srgb, var(--swatch--brand-900, #000) 35%, transparent);
+
+  /* Labels stay theme text: every unit state on this ramp is light enough to
+   * read against. Set this to a light colour if you move units further down
+   * the ramp. `none` leaves labels alone. */
+  --fpx-label-on-unit: none;
 }
 
 /* Data carriers exist to pass CMS values to the script, not to be seen. */

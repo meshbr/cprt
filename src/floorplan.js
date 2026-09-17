@@ -31,7 +31,8 @@
       hover: styles.getPropertyValue('--fpx-unit-hover').trim() || 'currentColor',
       unitBase: styles.getPropertyValue('--fpx-unit-base').trim(),
       structure: styles.getPropertyValue('--fpx-structure').trim(),
-      stroke: styles.getPropertyValue('--fpx-stroke').trim()
+      stroke: styles.getPropertyValue('--fpx-stroke').trim(),
+      labelOnUnit: styles.getPropertyValue('--fpx-label-on-unit').trim()
     };
   }
 
@@ -165,6 +166,24 @@
   }
 
   var STRUCTURE = /stair|storage|elevator|core|amenity|fitness|corridor|hall|lobby|trash|mech/i;
+
+  /**
+   * Unit labels sit in their own group, so they cannot inherit the unit's fill.
+   * When units are dark, their labels need to go light while structural labels
+   * ("STAIRS", "AMENITY ROOM") stay dark on their lighter backgrounds. Match by
+   * the number in the label text against the units on this floor.
+   */
+  function tintLabels(svg, numbers, color) {
+    if (!svg || !color || color === 'none' || !numbers.length) return;
+    Array.prototype.forEach.call(svg.querySelectorAll('text'), function (el) {
+      var digits = (el.textContent || '').replace(/\D+/g, '');
+      if (!digits || numbers.indexOf(digits) === -1) return;
+      el.style.fill = color;
+      Array.prototype.forEach.call(el.querySelectorAll('tspan'), function (t) {
+        t.style.fill = color;
+      });
+    });
+  }
 
   /**
    * Recolour every stroke in the drawing. Only shapes that already have a
@@ -438,6 +457,7 @@
     function bindHotspots(svg, floorSlug) {
       if (!svg) return;
       var missing = [];
+      var bound = [];
 
       units.forEach(function (unit) {
         if (unit.floor !== floorSlug) return;
@@ -448,6 +468,9 @@
           return;
         }
         unit.shape = shape;
+        // Take the trailing segment of the slug: 525-unit-400 -> "400".
+        // Stripping all non-digits would give "525400" and match nothing.
+        bound.push(String(unit.slug).split('-').pop());
         repaintBase(shape, COLORS.unitBase);
 
         shape.setAttribute('class', ((shape.getAttribute('class') || '') + ' fpx-linked').trim());
@@ -477,6 +500,8 @@
           }
         });
       });
+
+      tintLabels(svg, bound, COLORS.labelOnUnit);
 
       // Only this floor's units are attempted, so anything here is a real
       // mismatch between a unit slug and the SVG — worth investigating.
