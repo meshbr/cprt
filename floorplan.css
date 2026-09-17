@@ -1,0 +1,56 @@
+/* Interactive floor plan — runtime styles only.
+ *
+ * The visual design of the tool (.fpx-section, .fpx-body, .fpx-detail, etc.)
+ * lives in Webflow as classes so it stays editable in the Designer. This file
+ * carries only what the script depends on and what cannot be expressed there:
+ * hiding the CMS data carriers, the injected mobile toggle, and the responsive
+ * collapse. Keep design changes in Webflow; keep behavioural CSS here.
+ */
+
+/* Data carriers exist to pass CMS values to the script, not to be seen. */
+.dropdown_content #fpx-f-name,
+.dropdown_content #fpx-f-slug,
+.dropdown_content #fpx-f-num,
+.dropdown_content #fpx-f-svg,
+.dropdown_content #fpx-f-featured,
+.dropdown_content #u-slug,
+.dropdown_content #u-floor,
+.dropdown_content #u-name,
+.dropdown_content #u-desc,
+.dropdown_content #u-type,
+.dropdown_content #u-bd,
+.dropdown_content #u-ba,
+.dropdown_content #u-sf,
+.dropdown_content #u-img,
+.dropdown_content #u-url {
+  display: none !important;
+}
+
+/* Injected by the script; only ever visible on small screens. */
+.fpx-plate-toggle {
+  display: none;
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #d9d5d5;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+@media (max-width: 767px) {
+  .fpx-body { grid-template-columns: 1fr; gap: 24px; }
+
+  /* The left border and indent assume a column beside the panel. */
+  .fpx-detail {
+    padding-left: 0;
+    border-left: 0;
+    border-top: 1px solid #d9d5d5;
+    padding-top: 24px;
+    min-height: 0;
+  }
+
+  .fpx-plate { position: static; }
+  .fpx-plate[hidden] { display: none; }
+  .fpx-plate-toggle { display: block; }
+}
