@@ -38,17 +38,20 @@
   cursor: pointer;
 }
 
-/* Plate and detail panel sit centred against each other, and the plate is
- * capped so a tall floor plate cannot outgrow the section. Tune the cap with
- * --fpx-plate-max (set it on .fpx-section in Webflow to match the Section's
- * Height setting). */
-.fpx-body { align-items: center; }
+/* The plate is sized to the viewport so the whole drawing stays visible without
+ * scrolling, with a floor so it never collapses on short screens. The height is
+ * fixed rather than fluid on purpose: if it depended on the row, the plate would
+ * shift every time the detail panel grew. Both columns start at the top.
+ * Override --fpx-plate-h, or set Height on .fpx-plate in Webflow. */
+.fpx-body { align-items: start; }
 
 .fpx-plate {
   display: flex;
   align-items: center;
   justify-content: center;
-  max-height: var(--fpx-plate-max, 70svh);
+  align-self: start;
+  height: var(--fpx-plate-h, 65svh);
+  min-height: 20rem;
 }
 
 /* Scale the injected SVG to fit the cap rather than overflow it. */
@@ -71,7 +74,7 @@
     min-height: 0;
   }
 
-  .fpx-plate { position: static; max-height: none; }
+  .fpx-plate { position: static; height: auto; min-height: 0; }
   .fpx-plate svg { width: 100%; }
   .fpx-plate[hidden] { display: none; }
   .fpx-plate-toggle { display: block; }
