@@ -25,8 +25,13 @@
   function readColors(section) {
     var styles = getComputedStyle(section);
     return {
-      selected: styles.getPropertyValue('--fpx-unit-selected').trim() || '#675a57',
-      hover: styles.getPropertyValue('--fpx-unit-hover').trim() || '#b3a9a6'
+      // currentColor as the fallback keeps this theme-driven even if the
+      // variables are missing: it resolves to the inherited text colour.
+      selected: styles.getPropertyValue('--fpx-unit-selected').trim() || 'currentColor',
+      hover: styles.getPropertyValue('--fpx-unit-hover').trim() || 'currentColor',
+      unitBase: styles.getPropertyValue('--fpx-unit-base').trim(),
+      structure: styles.getPropertyValue('--fpx-structure').trim(),
+      stroke: styles.getPropertyValue('--fpx-stroke').trim()
     };
   }
 
@@ -122,6 +127,81 @@
         shape.removeAttribute('data-of');
       }
     });
+  }
+
+  /**
+   * Repaint without stashing the previous value, and clear any stash, so the
+   * new colour becomes what hover and selection restore back to.
+   */
+  function repaintBase(el, color) {
+    if (!el || !color || color === 'none') return;
+    el.style.fill = color;
+    var shapes = el.querySelectorAll
+      ? el.querySelectorAll('polygon, path, rect, circle, polyline')
+      : [];
+    Array.prototype.forEach.call(shapes, function (shape) {
+      if (isLight(shape)) return;   // leave icons and other light marks alone
+      shape.style.fill = color;
+      shape.removeAttribute('data-of');
+    });
+  }
+
+  /**
+   * Near-white test. These literals are not palette choices: they read what
+   * Illustrator already wrote into the drawing, so pictograms inside amenity
+   * rooms survive a repaint instead of vanishing into it.
+   */
+  function isLight(shape) {
+    var fill = (shape.style.fill || shape.getAttribute('fill') || '').trim().toLowerCase();
+    if (!fill || fill === 'none') return true;
+    if (fill === 'white' || fill === '#fff' || fill === '#ffffff') return true;
+    var m = fill.match(/^#([0-9a-f]{6})$/);
+    if (m) {
+      var n = parseInt(m[1], 16);
+      var r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+      return (r * 0.299 + g * 0.587 + b * 0.114) > 225;
+    }
+    return false;
+  }
+
+  var STRUCTURE = /stair|storage|elevator|core|amenity|fitness|corridor|hall|lobby|trash|mech/i;
+
+  /**
+   * Recolour every stroke in the drawing. Only shapes that already have a
+   * stroke are touched, so this changes the outlines' colour without adding
+   * any, and the line weights Illustrator set are left as they are.
+   */
+  function tintStrokes(svg, color) {
+    if (!svg || !color || color === 'none') return;
+    var shapes = svg.querySelectorAll('polygon, path, rect, circle, polyline, line, g');
+    Array.prototype.forEach.call(shapes, function (shape) {
+      var stroke = (shape.style.stroke || shape.getAttribute('stroke') || '').trim().toLowerCase();
+      if (!stroke || stroke === 'none') return;
+      shape.style.stroke = color;
+      shape.removeAttribute('stroke');
+    });
+  }
+
+  /** Tint the non-unit parts of the plate so the drawing sits in the palette. */
+  function tintStructure(svg, color) {
+    if (!svg || !color || color === 'none') return;
+    Array.prototype.forEach.call(svg.querySelectorAll('g'), function (g) {
+      var key = (g.getAttribute('id') || '') + ' ' + (g.getAttribute('data-name') || '');
+      if (STRUCTURE.test(key)) repaintBase(g, color);
+    });
+  }
+
+  /**
+   * The CTA may be a plain <a id="fpxCta">, or a wrapper with that id holding a
+   * Button Main component — whose <a> is rendered by a nested Clickable and so
+   * cannot carry an id of its own. Show/hide the wrapper, set href on the link.
+   */
+  function resolveCta() {
+    var el = document.getElementById('fpxCta');
+    if (!el) return null;
+    if (el.tagName === 'A') return { wrap: el, link: el };
+    var link = el.querySelector('a');
+    return { wrap: el, link: link || el };
   }
 
   function init() {
@@ -345,6 +425,8 @@
 
           var live = plate.querySelector('svg');
           labelsClickThrough(live);
+          tintStructure(live, COLORS.structure);
+          tintStrokes(live, COLORS.stroke);
           bindHotspots(live, floor.slug);
           loadedFloor = floor.slug;
         })
@@ -366,6 +448,7 @@
           return;
         }
         unit.shape = shape;
+        repaintBase(shape, COLORS.unitBase);
 
         shape.setAttribute('class', ((shape.getAttribute('class') || '') + ' fpx-linked').trim());
         shape.setAttribute('tabindex', '0');
@@ -442,13 +525,17 @@
         }
       }
 
-      var cta = document.getElementById('fpxCta');
+      var cta = resolveCta();
       if (cta) {
         if (unit.url) {
-          cta.href = unit.url;
-          cta.style.display = 'inline-block';
+          if (cta.link.tagName === 'A') {
+            cta.link.href = unit.url;
+            cta.link.target = '_blank';
+            cta.link.rel = 'noopener noreferrer';
+          }
+          cta.wrap.style.display = '';
         } else {
-          cta.style.display = 'none';
+          cta.wrap.style.display = 'none';
         }
       }
 
