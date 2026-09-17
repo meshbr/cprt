@@ -7,6 +7,15 @@
  * collapse. Keep design changes in Webflow; keep behavioural CSS here.
  */
 
+/* Unit colours follow the site's theme variables, so the plate matches whatever
+ * Theme the Section is set to. Override either of these on .fpx-section in
+ * Webflow to decouple the plate from the theme. The hex values are fallbacks
+ * for when the theme variables are not present. */
+.fpx-section {
+  --fpx-unit-selected: var(--_theme---heading-accent, #675a57);
+  --fpx-unit-hover: color-mix(in srgb, var(--fpx-unit-selected) 40%, transparent);
+}
+
 /* Data carriers exist to pass CMS values to the script, not to be seen. */
 .dropdown_content #fpx-f-name,
 .dropdown_content #fpx-f-slug,

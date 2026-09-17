@@ -15,9 +15,20 @@
 (function () {
   'use strict';
 
-  var SELECTED = '#675a57';
-  var HOVER = '#b3a9a6';
   var MOBILE = '(max-width: 767px)';
+
+  /**
+   * Unit colours come from CSS custom properties on .fpx-section, which
+   * themselves default to the site's theme variables. Reading them at runtime
+   * means the plate follows the Section's Theme with no hardcoded palette here.
+   */
+  function readColors(section) {
+    var styles = getComputedStyle(section);
+    return {
+      selected: styles.getPropertyValue('--fpx-unit-selected').trim() || '#675a57',
+      hover: styles.getPropertyValue('--fpx-unit-hover').trim() || '#b3a9a6'
+    };
+  }
 
   function text(root, selector) {
     var el = root.querySelector(selector);
@@ -109,6 +120,7 @@
     var section = document.querySelector('.fpx-section');
     if (!section) return;
 
+    var COLORS = readColors(section);
     var plate = document.getElementById('fpxPlate');
     var data = section.querySelector('.fpx-data');
     var panel = document.getElementById('fpxBody');
@@ -359,7 +371,7 @@
         );
 
         // Hover and focus both preview; the selected unit keeps its colour.
-        function hoverOn() { if (paintedShape !== shape) paint(shape, HOVER); }
+        function hoverOn() { if (paintedShape !== shape) paint(shape, COLORS.hover); }
         function hoverOff() { if (paintedShape !== shape) paint(shape, ''); }
 
         shape.addEventListener('mouseenter', hoverOn);
@@ -398,7 +410,7 @@
 
     function selectUnit(unit) {
       if (paintedShape) paint(paintedShape, '');
-      if (unit.shape) paint(unit.shape, SELECTED);
+      if (unit.shape) paint(unit.shape, COLORS.selected);
       paintedShape = unit.shape;
 
       if (unitUI && unitUI.label) unitUI.label.textContent = unit.name;
