@@ -14,6 +14,16 @@
 .fpx-section {
   --fpx-unit-selected: var(--_theme---heading-accent, #675a57);
   --fpx-unit-hover: color-mix(in srgb, var(--fpx-unit-selected) 40%, transparent);
+
+  /* Resting fills. Units sit a shade above the page; structural areas (stairs,
+   * cores, amenity rooms) recede, so what is clickable reads without hovering.
+   * Set either to `none` to keep the drawing's own colours instead. */
+  --fpx-unit-base: var(--_theme---background-2, #efe9e7);
+  --fpx-structure: color-mix(in srgb, var(--_theme---text, #000) 12%, transparent);
+
+  /* Outlines. Only shapes that already have a stroke are recoloured, so line
+   * weights from the drawing are preserved. */
+  --fpx-stroke: color-mix(in srgb, var(--_theme---text, #000) 30%, transparent);
 }
 
 /* Data carriers exist to pass CMS values to the script, not to be seen. */
