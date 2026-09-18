@@ -125,7 +125,14 @@
       el.style.removeProperty('fill');
       el.removeAttribute('font-family');
       el.removeAttribute('fill');
+      // Illustrator sets font-size as a presentation attribute, which a CSS
+      // class overrides — so the class would resize every label. Capture the
+      // size as rendered, then pin it inline where it outranks the class.
+      // The size is in SVG user units, drawn to fit inside each unit shape.
+      var size = '';
+      try { size = window.getComputedStyle(el).fontSize; } catch (e) { size = ''; }
       if (el.classList) el.classList.add('u-text-style-h6');
+      if (size) el.style.fontSize = size;
       reflowText(el);
     });
     Array.prototype.forEach.call(svg.querySelectorAll('g'), function (el) {

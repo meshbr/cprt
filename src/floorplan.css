@@ -20,7 +20,7 @@
   --fpx-unit-selected: var(--swatch--brand-925, #012528);  /* selected         */
   --fpx-structure: var(--swatch--brand-700, #007c8f);      /* stairs, amenity  */
   --fpx-stroke: var(--swatch--brand-200, #c9f8fd);         /* outlines         */
-  --fpx-stroke-width: 2.5;
+  --fpx-stroke-width: 2;
 
   /* Every label is light against these fills, so the per-unit tinting the
    * script can do is not needed — the rule below covers them all. */
