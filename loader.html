@@ -1,0 +1,36 @@
+<!-- Interactive floor plan — github.com/meshbr/cprt
+     Paste into Webflow: Site settings → Custom code → Footer code.
+
+     Pinned to a commit SHA on purpose: jsDelivr caches the branch→commit
+     mapping for ~12h and the purge API does not reset it, so @main can serve
+     stale code after a deploy. Update SHA below when you ship.
+
+     To work locally instead, run `npm run dev` and in the browser console:
+       localStorage.setItem('cprt-fp-dev', 'true')   // load from localhost
+       localStorage.removeItem('cprt-fp-dev')        // back to the CDN
+     Then refresh. Only your browser is affected; visitors keep the CDN copy. -->
+<script>
+  (() => {
+    const SHA = 'REPLACE_WITH_COMMIT_SHA';
+    const dev = localStorage.getItem('cprt-fp-dev') === 'true';
+    const base = dev
+      ? 'http://localhost:5174/src/'
+      : `https://cdn.jsdelivr.net/gh/meshbr/cprt@${SHA}/src/`;
+
+    const css = document.createElement('link');
+    css.rel = 'stylesheet';
+    css.href = base + 'floorplan.css';
+
+    const js = document.createElement('script');
+    js.src = base + 'floorplan.js';
+
+    document.head.append(css, js);
+
+    if (dev) {
+      console.log('[fpx] dev mode — loading from ' + base);
+      js.addEventListener('error', () =>
+        console.warn('[fpx] dev server not reachable. Run `npm run dev`, or ' +
+                     "clear the flag with localStorage.removeItem('cprt-fp-dev')"));
+    }
+  })();
+</script>

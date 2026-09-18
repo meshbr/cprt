@@ -1,0 +1,13 @@
+{
+  "name": "cprt-floorplan",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Interactive floor plan for CPRT Webflow sites",
+  "scripts": {
+    "dev": "vite",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0"
+  }
+}
