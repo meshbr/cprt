@@ -23,8 +23,17 @@
   --fpx-stroke-width: 2;
   /* Keyboard focus. The browser's focus ring is suppressed because it draws a
    * rectangle around an irregular shape, so this thicker outline is the only
-   * focus indicator — raise it if it reads too subtly. */
-  --fpx-stroke-width-focus: 3;
+   * focus indicator. Derived from the resting width so the two stay in step —
+   * raise the multiplier if it reads too subtly. */
+  --fpx-stroke-width-focus: calc(var(--fpx-stroke-width) * 2);
+  /* The ring itself. Widening the unit's stroke alone was too quiet to read as
+   * focus, so the script also draws a rect around the unit — these style it.
+   * Width, offset and radius are SVG user units, like every other stroke here,
+   * so they scale with the drawing. */
+  --fpx-focus-ring: var(--swatch--light-100, #fff);
+  --fpx-focus-ring-width: 4;
+  --fpx-focus-ring-offset: 8;
+  --fpx-focus-ring-radius: 4;
 
   /* Every label is light against these fills, so the per-unit tinting the
    * script can do is not needed — the rule below covers them all. */
@@ -85,6 +94,14 @@
  * shape that gains focus before the script has wired it. */
 .fpx-plate svg .fpx-linked:focus { outline: none; }
 
+/* The replacement ring, appended by the script on focus and removed on blur.
+ * It is a sibling of the unit at the SVG root, so it is drawn over everything
+ * else on the plate. */
+.fpx-plate svg .fpx-focus-ring {
+  stroke: var(--fpx-focus-ring, #fff);
+  stroke-width: var(--fpx-focus-ring-width, 4);
+}
+
 /* The script adds .u-text-style-h6 to each label, so family, weight,
  * letter-spacing and transform come from the design system. Only the colour is
  * set here. Font size stays as exported — see the note in the script. */
@@ -104,13 +121,26 @@
 @media (max-width: 767px) {
   .fpx-body { grid-template-columns: 1fr; gap: 24px; }
 
-  /* The left border and indent assume a column beside the panel. */
+  /* The left border and indent assume a column beside the panel. No border-top
+   * to replace it: the plate toggle directly above already ends in a rule of
+   * its own, and the two together read as a mistake. */
   .fpx-detail {
     padding-left: 0;
     border-left: 0;
-    border-top: 1px solid var(--_theme---border, #d9d5d5);
     padding-top: 24px;
     min-height: 0;
+  }
+
+  /* Webflow pulls the close button 4px above the panel so it sits level with
+   * the heading beside it. Stacked, that lands it on the toggle's rule — drop
+   * it to the panel's own padding, level with the unit name. */
+  .fpx-detail .fpx-close { top: 24px; }
+
+  /* Centred in Webflow, which reads as a stray indent once the panel is full
+   * width and everything below it is left aligned. */
+  .fpx-detail .fpx-detail-msg {
+    text-align: left;
+    justify-content: flex-start;
   }
 
   .fpx-plate { position: static; height: auto; min-height: 0; }

@@ -171,8 +171,11 @@ needs — plus its own CMS data.
 - **Label fit**: `u-text-style-h6` adds letter-spacing, so long labels
   ("AMENITY ROOM", "ELEVATORS") may overflow their shapes. If so, either drop
   the letter-spacing for labels or scale the pinned font-size to ~90%.
-- **Focus indicator**: the browser focus ring is suppressed; the 2→3 stroke
-  widening is the only focus cue. Tab through and confirm it reads.
+- **Focus indicator**: the browser's ring is suppressed and the stroke
+  widening alone was too quiet, so the script draws its own rect around the
+  focused unit (`addFocusRing`). Its 8-unit offset overlaps neighbouring units
+  slightly — drop `--fpx-focus-ring-offset` if that reads badly on the denser
+  floors.
 - **Utility classes**: several `fpx-` classes still carry bespoke typography
   and spacing that should move to Lumos utilities, after which the duplicated
   properties should come out of the Webflow classes.

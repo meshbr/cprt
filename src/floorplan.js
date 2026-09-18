@@ -33,6 +33,8 @@
       structure: styles.getPropertyValue('--fpx-structure').trim(),
       stroke: styles.getPropertyValue('--fpx-stroke').trim(),
       strokeWidthFocus: styles.getPropertyValue('--fpx-stroke-width-focus').trim(),
+      focusRingOffset: styles.getPropertyValue('--fpx-focus-ring-offset').trim(),
+      focusRingRadius: styles.getPropertyValue('--fpx-focus-ring-radius').trim(),
       labelOnUnit: styles.getPropertyValue('--fpx-label-on-unit').trim(),
       strokeWidth: styles.getPropertyValue('--fpx-stroke-width').trim()
     };
@@ -185,6 +187,74 @@
       if (isLight(shape)) return;
       shape.style.strokeWidth = width;
     });
+  }
+
+  var SVG_NS = 'http://www.w3.org/2000/svg';
+
+  /**
+   * Draw a focus ring around a unit.
+   *
+   * Widening the unit's own stroke is too quiet to notice: these drawings are
+   * full of strokes already, so a thicker one reads as part of the plan rather
+   * than as a focus cue. This adds a separate rect around the unit's bounding
+   * box — the rectangle the browser's own ring would have drawn, but styled to
+   * look deliberate.
+   *
+   * It is appended to the SVG root, not to the unit, for two reasons: the fill
+   * repaints walk the unit's own shapes and would otherwise paint the ring, and
+   * a ring at the root is drawn last so nothing overlaps it.
+   *
+   * getBBox is in the unit's own coordinate space, so a matrix has to carry it
+   * into the root's. That matrix is *not* getCTM: getCTM maps to the viewport,
+   * which already includes the viewBox transform the ring would inherit anyway
+   * — using it scales the ring by the viewBox factor a second time. Dividing
+   * the two screen matrices gives the unit-to-root transform with no viewBox
+   * in it, and collapses to the identity on a plate with no transforms.
+   */
+  function addFocusRing(shape, offset, radius) {
+    var svg = shape && shape.ownerSVGElement;
+    if (!svg || !shape.getBBox || !shape.getScreenCTM) return null;
+
+    var box, matrix = null;
+    try {
+      box = shape.getBBox();
+      var rootCTM = svg.getScreenCTM();
+      var shapeCTM = shape.getScreenCTM();
+      if (rootCTM && shapeCTM) matrix = rootCTM.inverse().multiply(shapeCTM);
+    } catch (e) {
+      return null;
+    }
+    if (!box || !box.width || !box.height) return null;
+
+    var pad = parseFloat(offset);
+    if (isNaN(pad)) pad = 0;
+
+    var ring = document.createElementNS(SVG_NS, 'rect');
+    ring.setAttribute('class', 'fpx-focus-ring');
+    ring.setAttribute('x', box.x - pad);
+    ring.setAttribute('y', box.y - pad);
+    ring.setAttribute('width', box.width + pad * 2);
+    ring.setAttribute('height', box.height + pad * 2);
+    ring.setAttribute('fill', 'none');
+    ring.setAttribute('pointer-events', 'none');
+
+    var r = parseFloat(radius);
+    if (!isNaN(r) && r > 0) {
+      ring.setAttribute('rx', r);
+      ring.setAttribute('ry', r);
+    }
+    if (matrix) {
+      ring.setAttribute('transform', 'matrix(' + matrix.a + ',' + matrix.b + ',' +
+        matrix.c + ',' + matrix.d + ',' + matrix.e + ',' + matrix.f + ')');
+    }
+
+    svg.appendChild(ring);
+    return ring;
+  }
+
+  function removeFocusRing(ring) {
+    if (ring && ring.parentNode) ring.parentNode.removeChild(ring);
+    return null;
   }
 
   function repaintBase(el, color, stroke, width) {
@@ -600,18 +670,22 @@
         function hoverOn() { if (paintedShape !== shape) paint(shape, COLORS.hover); }
         function hoverOff() { if (paintedShape !== shape) paint(shape, ''); }
 
-        // The default focus ring draws a large rectangle around the shape's
-        // bounding box, which looks wrong on an irregular floor plan. Turned
-        // off here, with the thicker outline below standing in for it.
+        // The browser's own ring is suppressed: it ignores `rx` and sits tight
+        // against the bounding box. addFocusRing draws the replacement.
         shape.style.outline = 'none';
 
+        var ring = null;
         function focusOn() {
           hoverOn();
           setStrokeWidth(shape, COLORS.strokeWidthFocus || COLORS.strokeWidth);
+          if (!ring) {
+            ring = addFocusRing(shape, COLORS.focusRingOffset, COLORS.focusRingRadius);
+          }
         }
         function focusOff() {
           hoverOff();
           setStrokeWidth(shape, COLORS.strokeWidth);
+          ring = removeFocusRing(ring);
         }
 
         shape.addEventListener('mouseenter', hoverOn);
