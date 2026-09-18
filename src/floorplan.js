@@ -87,6 +87,32 @@
    * hotspots, so a click on the number never reaches the unit beneath. Making
    * them transparent to the mouse lets clicks and hovers fall through.
    */
+  /**
+   * Illustrator positions every glyph separately — each letter is a <tspan>
+   * with its own x. That only holds together in the font it was exported with;
+   * in any other font the widths differ and the letters collide. Dropping the
+   * per-glyph x lets the browser lay the text out normally.
+   *
+   * Line breaks are preserved: tspans that start a new line carry a different
+   * y, so the first tspan of each line keeps its position.
+   */
+  function reflowText(el) {
+    var spans = el.querySelectorAll ? el.querySelectorAll('tspan') : [];
+    if (spans.length < 2) return;
+    var lastY = null;
+    Array.prototype.forEach.call(spans, function (span) {
+      var y = span.getAttribute('y');
+      if (y !== lastY) {        // first glyph of a line — keep its anchor
+        lastY = y;
+        return;
+      }
+      span.removeAttribute('x');
+      span.removeAttribute('dx');
+    });
+    el.removeAttribute('textLength');
+    el.removeAttribute('lengthAdjust');
+  }
+
   function labelsClickThrough(svg) {
     if (!svg) return;
     Array.prototype.forEach.call(svg.querySelectorAll('text, tspan'), function (el) {
@@ -100,6 +126,7 @@
       el.removeAttribute('font-family');
       el.removeAttribute('fill');
       if (el.classList) el.classList.add('u-text-style-h6');
+      reflowText(el);
     });
     Array.prototype.forEach.call(svg.querySelectorAll('g'), function (el) {
       var key = ((el.getAttribute('id') || '') + ' ' +
@@ -136,7 +163,7 @@
    * Repaint without stashing the previous value, and clear any stash, so the
    * new colour becomes what hover and selection restore back to.
    */
-  function repaintBase(el, color) {
+  function repaintBase(el, color, stroke, width) {
     if (!el || !color || color === 'none') return;
     el.style.fill = color;
     var shapes = el.querySelectorAll
@@ -146,6 +173,16 @@
       if (isLight(shape)) return;   // leave icons and other light marks alone
       shape.style.fill = color;
       shape.removeAttribute('data-of');
+      // These drawings separate rooms with differing fills rather than
+      // outlines, so the stroke has to be added, not just recoloured.
+      if (stroke && stroke !== 'none') {
+        shape.style.stroke = stroke;
+        shape.removeAttribute('stroke');
+      }
+      if (width && width !== 'none') {
+        shape.style.strokeWidth = width;
+        shape.removeAttribute('stroke-width');
+      }
     });
   }
 
@@ -229,11 +266,11 @@
   }
 
   /** Tint the non-unit parts of the plate so the drawing sits in the palette. */
-  function tintStructure(svg, color) {
+  function tintStructure(svg, color, stroke, width) {
     if (!svg || !color || color === 'none') return;
     Array.prototype.forEach.call(svg.querySelectorAll('g'), function (g) {
       var key = (g.getAttribute('id') || '') + ' ' + (g.getAttribute('data-name') || '');
-      if (STRUCTURE.test(key)) repaintBase(g, color);
+      if (STRUCTURE.test(key)) repaintBase(g, color, stroke, width);
     });
   }
 
@@ -472,7 +509,7 @@
 
           var live = plate.querySelector('svg');
           labelsClickThrough(live);
-          tintStructure(live, COLORS.structure);
+          tintStructure(live, COLORS.structure, COLORS.stroke, COLORS.strokeWidth);
           tintStrokes(live, COLORS.stroke, COLORS.strokeWidth);
           bindHotspots(live, floor.slug);
           loadedFloor = floor.slug;
@@ -501,7 +538,7 @@
         var number = String(unit.slug).split('-').pop();
         bound.push(number);
         unit.label = labelFor(svg, number);
-        repaintBase(shape, COLORS.unitBase);
+        repaintBase(shape, COLORS.unitBase, COLORS.stroke, COLORS.strokeWidth);
 
         shape.setAttribute('class', ((shape.getAttribute('class') || '') + ' fpx-linked').trim());
         shape.setAttribute('tabindex', '0');
