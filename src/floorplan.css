@@ -21,6 +21,10 @@
   --fpx-structure: var(--swatch--brand-700, #007c8f);      /* stairs, amenity  */
   --fpx-stroke: var(--swatch--brand-200, #c9f8fd);         /* outlines         */
   --fpx-stroke-width: 2;
+  /* Keyboard focus. The browser's focus ring is suppressed because it draws a
+   * rectangle around an irregular shape, so this thicker outline is the only
+   * focus indicator — raise it if it reads too subtly. */
+  --fpx-stroke-width-focus: 3;
 
   /* Every label is light against these fills, so the per-unit tinting the
    * script can do is not needed — the rule below covers them all. */
@@ -76,6 +80,10 @@
   height: var(--fpx-plate-h, 65svh);
   min-height: 20rem;
 }
+
+/* Belt and braces: the script sets this inline too, but this catches any
+ * shape that gains focus before the script has wired it. */
+.fpx-plate svg .fpx-linked:focus { outline: none; }
 
 /* The script adds .u-text-style-h6 to each label, so family, weight,
  * letter-spacing and transform come from the design system. Only the colour is

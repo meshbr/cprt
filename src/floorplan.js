@@ -32,6 +32,7 @@
       unitBase: styles.getPropertyValue('--fpx-unit-base').trim(),
       structure: styles.getPropertyValue('--fpx-structure').trim(),
       stroke: styles.getPropertyValue('--fpx-stroke').trim(),
+      strokeWidthFocus: styles.getPropertyValue('--fpx-stroke-width-focus').trim(),
       labelOnUnit: styles.getPropertyValue('--fpx-label-on-unit').trim(),
       strokeWidth: styles.getPropertyValue('--fpx-stroke-width').trim()
     };
@@ -170,6 +171,22 @@
    * Repaint without stashing the previous value, and clear any stash, so the
    * new colour becomes what hover and selection restore back to.
    */
+  /**
+   * Set just the stroke width on a unit's shapes. Used for the focus state:
+   * the browser's own focus ring is turned off, so the thicker outline is what
+   * marks the focused unit — keep it clearly different from the resting width.
+   */
+  function setStrokeWidth(el, width) {
+    if (!el || !width) return;
+    var shapes = el.querySelectorAll
+      ? el.querySelectorAll('polygon, path, rect, circle, polyline')
+      : [];
+    Array.prototype.forEach.call(shapes, function (shape) {
+      if (isLight(shape)) return;
+      shape.style.strokeWidth = width;
+    });
+  }
+
   function repaintBase(el, color, stroke, width) {
     if (!el || !color || color === 'none') return;
     el.style.fill = color;
@@ -583,10 +600,24 @@
         function hoverOn() { if (paintedShape !== shape) paint(shape, COLORS.hover); }
         function hoverOff() { if (paintedShape !== shape) paint(shape, ''); }
 
+        // The default focus ring draws a large rectangle around the shape's
+        // bounding box, which looks wrong on an irregular floor plan. Turned
+        // off here, with the thicker outline below standing in for it.
+        shape.style.outline = 'none';
+
+        function focusOn() {
+          hoverOn();
+          setStrokeWidth(shape, COLORS.strokeWidthFocus || COLORS.strokeWidth);
+        }
+        function focusOff() {
+          hoverOff();
+          setStrokeWidth(shape, COLORS.strokeWidth);
+        }
+
         shape.addEventListener('mouseenter', hoverOn);
         shape.addEventListener('mouseleave', hoverOff);
-        shape.addEventListener('focus', hoverOn);
-        shape.addEventListener('blur', hoverOff);
+        shape.addEventListener('focus', focusOn);
+        shape.addEventListener('blur', focusOff);
         shape.addEventListener('click', function () { selectUnit(unit); });
         shape.addEventListener('keydown', function (e) {
           if (e.key === 'Enter' || e.key === ' ') {
