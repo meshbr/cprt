@@ -91,14 +91,15 @@
     if (!svg) return;
     Array.prototype.forEach.call(svg.querySelectorAll('text, tspan'), function (el) {
       el.style.pointerEvents = 'none';
-      // Illustrator writes font-family and fill inline, which beats any
-      // stylesheet. Strip them so the labels pick up site typography from CSS.
-      // font-size is left alone: it is in SVG user units and sized to fit
-      // inside the unit shapes, so overriding it would break the drawing.
+      // Borrow the site's heading style for the labels. Illustrator writes
+      // font-family and fill inline, which would beat the class, so strip
+      // those. font-size stays: it is in SVG user units, drawn to fit inside
+      // each unit, so letting CSS set it would break the smaller shapes.
       el.style.removeProperty('font-family');
       el.style.removeProperty('fill');
       el.removeAttribute('font-family');
       el.removeAttribute('fill');
+      if (el.classList) el.classList.add('u-text-style-h6');
     });
     Array.prototype.forEach.call(svg.querySelectorAll('g'), function (el) {
       var key = ((el.getAttribute('id') || '') + ' ' +

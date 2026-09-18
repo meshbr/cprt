@@ -12,27 +12,20 @@
  * Webflow to decouple the plate from the theme. The hex values are fallbacks
  * for when the theme variables are not present. */
 .fpx-section {
-  /* Unit states are three steps on the brand ramp rather than three separate
-   * choices, so they stay related to each other and to the brand: light at
-   * rest, mid on hover, dark when selected. Move all three together to shift
-   * the plate without breaking that relationship. */
-  --fpx-unit-base: var(--swatch--brand-300, #63e2f1);
-  --fpx-unit-hover: var(--swatch--brand-600, #04a3b5);
-  --fpx-unit-selected: var(--swatch--brand-800, #035e68);
-
-  /* The selected fill is dark, so that unit's label lightens while it is
-   * selected and reverts afterwards. Other labels keep the theme text colour.
-   * Set to `none` to leave all labels alone. */
-  --fpx-label-on-unit: var(--swatch--light-100, #fff);
-
-  /* Structural areas (stairs, cores, amenity rooms) stay neutral so they read
-   * as fixed rather than as another unit state. */
-  --fpx-structure: color-mix(in srgb, var(--_theme---text, #000) 12%, transparent);
-
-  /* Outlines. Width is in SVG user units so it scales with the drawing;
-   * `none` keeps whatever weight Illustrator exported. */
-  --fpx-stroke: color-mix(in srgb, var(--swatch--brand-900, #000) 35%, transparent);
+  /* Floor plate palette. Two of these are a shade off the requested hex:
+   * brand-925 is #002529 (asked: #012528) and brand-700 is #048290
+   * (asked: #007c8f). Swap in the literal values if the difference matters. */
+  --fpx-unit-base: var(--swatch--brand-800, #035e68);      /* clickable units  */
+  --fpx-unit-hover: var(--swatch--brand-925, #012528);     /* hover            */
+  --fpx-unit-selected: var(--swatch--brand-925, #012528);  /* selected         */
+  --fpx-structure: var(--swatch--brand-700, #007c8f);      /* stairs, amenity  */
+  --fpx-stroke: var(--swatch--brand-200, #c9f8fd);         /* outlines         */
   --fpx-stroke-width: 2.5;
+
+  /* Every label is light against these fills, so the per-unit tinting the
+   * script can do is not needed — the rule below covers them all. */
+  --fpx-label: var(--swatch--light-100, #fff);
+  --fpx-label-on-unit: none;
 }
 
 /* Data carriers exist to pass CMS values to the script, not to be seen. */
@@ -82,14 +75,12 @@
   min-height: 20rem;
 }
 
-/* Unit-number labels take the site's typography. The script strips Illustrator's
- * inline font-family and fill first, since inline styles beat this rule.
- * Font size is deliberately not set: it is in SVG user units, scaled to fit
- * inside the unit shapes. */
+/* The script adds .u-text-style-h6 to each label, so family, weight,
+ * letter-spacing and transform come from the design system. Only the colour is
+ * set here. Font size stays as exported — see the note in the script. */
 .fpx-plate svg text,
 .fpx-plate svg tspan {
-  font-family: var(--_typography---font--primary-family, inherit);
-  fill: var(--_theme---text, currentColor);
+  fill: var(--fpx-label, #fff);
 }
 
 /* Scale the injected SVG to fit the cap rather than overflow it. */
