@@ -403,17 +403,38 @@
     }
 
     // --- mobile plate toggle ----------------------------------------------
+    // Built with the site's accordion classes so it matches the rest of the
+    // site without copying any of its styling here. The label stays put and
+    // the icon rotates, which is how the accordions behave.
+    var toggleWrap = document.createElement('div');
+    toggleWrap.className = 'accordion_component fpx-plate-toggle';
+
     var plateToggle = document.createElement('button');
     plateToggle.type = 'button';
-    plateToggle.className = 'fpx-plate-toggle';
+    plateToggle.className = 'accordion_toggle_button';
     plateToggle.setAttribute('aria-expanded', 'false');
-    plateToggle.textContent = 'View floor plan';
-    plate.parentNode.insertBefore(plateToggle, plate);
+
+    var toggleHeading = document.createElement('div');
+    toggleHeading.className = 'accordion_toggle_heading';
+    var toggleText = document.createElement('div');
+    toggleText.className = 'accordion_toggle_text';
+    toggleText.textContent = 'View Full Floorplan';
+    toggleHeading.appendChild(toggleText);
+
+    var toggleIcon = document.createElement('div');
+    toggleIcon.className = 'accordion_toggle_icon fpx-plate-toggle-icon';
+    toggleIcon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false">' +
+      '<path d="M5 9l7 7 7-7" stroke="currentColor" stroke-width="2" ' +
+      'stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+    plateToggle.appendChild(toggleHeading);
+    plateToggle.appendChild(toggleIcon);
+    toggleWrap.appendChild(plateToggle);
+    plate.parentNode.insertBefore(toggleWrap, plate);
 
     plateToggle.addEventListener('click', function () {
       var wasOpen = plateToggle.getAttribute('aria-expanded') === 'true';
       plateToggle.setAttribute('aria-expanded', wasOpen ? 'false' : 'true');
-      plateToggle.textContent = wasOpen ? 'View floor plan' : 'Hide floor plan';
       if (wasOpen) plate.setAttribute('hidden', '');
       else plate.removeAttribute('hidden');
 
