@@ -325,8 +325,18 @@
     // placeholder specs — worse than showing nothing at all.
     var body = section.querySelector('.fpx-body');
     if (body) body.style.display = 'none';
-    if (floorUI && floorUI.wrap) floorUI.wrap.style.display = 'none';
-    if (unitUI && unitUI.wrap) unitUI.wrap.style.display = 'none';
+
+    // Hide the controls wrapper rather than each dropdown. With no floors
+    // published, the floors list renders its empty state, so #fpx-f-slug does
+    // not exist and floorUI is never identified — that dropdown would stay
+    // visible if we relied on it.
+    var controls = section.querySelector('.fpx-controls');
+    if (controls) {
+      controls.style.display = 'none';
+    } else {
+      if (floorUI && floorUI.wrap) floorUI.wrap.style.display = 'none';
+      if (unitUI && unitUI.wrap) unitUI.wrap.style.display = 'none';
+    }
 
     var fallback = document.getElementById('fpxFallback');
     if (!fallback) {
