@@ -320,13 +320,23 @@
    * because with no floors there is no other CMS context to bind the PDF from.
    */
   function showFallback(section, floorUI, unitUI) {
-    var fallback = document.getElementById('fpxFallback');
-    if (!fallback) return;
-
+    // Hide the tool first, and unconditionally. With no floors there is
+    // nothing to show, and leaving it up renders an empty detail panel with
+    // placeholder specs — worse than showing nothing at all.
     var body = section.querySelector('.fpx-body');
     if (body) body.style.display = 'none';
     if (floorUI && floorUI.wrap) floorUI.wrap.style.display = 'none';
     if (unitUI && unitUI.wrap) unitUI.wrap.style.display = 'none';
+
+    var fallback = document.getElementById('fpxFallback');
+    if (!fallback) {
+      if (window.console) {
+        console.warn('[fpx] No floors for this property, and no #fpxFallback ' +
+                     'element to fall back to. Add the Interactive Properties ' +
+                     'collection list with #fpxFallback and #fpxPdf inside it.');
+      }
+      return;
+    }
 
     fallback.style.display = 'block';
 
